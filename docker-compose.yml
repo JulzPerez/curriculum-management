@@ -1,15 +1,44 @@
-version: '3.8'
+# version: '3.8'  <-- DELETE THIS LINE
+
 services:
   db:
     image: postgres:15
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    container_name: cms-db
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=curriculum_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: curriculum_db
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - csd-research-services
+
+  backend:
+    container_name: cms-backend
+    build: ./backend       # <--- ADD THIS (Tells Docker where the Dockerfile is)
+    # image: ... (You don't need 'image' if you have 'build')
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env
+    networks:
+      - csd-research-services
+
+  frontend:
+    container_name: cms-frontend
+    build: ./frontend  
+    environment:
+      - NEXT_PUBLIC_API_URL=https://curriculum.jeppy.online/api
+    depends_on:
+      - backend
+    networks:
+      - csd-research-services
 
 volumes:
   postgres_data:
+
+networks:
+  csd-research-services:
+    external: true

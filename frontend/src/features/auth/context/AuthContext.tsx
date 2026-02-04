@@ -52,7 +52,8 @@ const login = async (email: string, password: string) => {
         params.append('password', password);
 
         // 2. Fetch Token (Bypassing Axios to avoid 422)
-        const response = await fetch('http://localhost:8000/api/v1/login/access-token', {
+	const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+	const response = await fetch(`${apiUrl}/v1/login/access-token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: params
