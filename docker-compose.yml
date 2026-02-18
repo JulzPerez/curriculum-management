@@ -4,6 +4,7 @@ services:
   db:
     image: postgres:15
     container_name: cms-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
@@ -19,6 +20,7 @@ services:
     container_name: cms-backend
     build: ./backend       # <--- ADD THIS (Tells Docker where the Dockerfile is)
     # image: ... (You don't need 'image' if you have 'build')
+    restart: unless-stopped
     depends_on:
       - db
     env_file:
@@ -28,7 +30,8 @@ services:
 
   frontend:
     container_name: cms-frontend
-    build: ./frontend  
+    build: ./frontend
+    restart: unless-stopped
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     depends_on:
