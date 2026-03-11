@@ -25,6 +25,8 @@ services:
       - ./backend/.env
     networks:
       - csd-research-services
+    ports:
+      - "8000:8000"
 
   frontend:
     container_name: cms-frontend
@@ -35,6 +37,8 @@ services:
       - backend
     networks:
       - csd-research-services
+    ports:
+      - "3000:3000"
 
 volumes:
   postgres_data:
