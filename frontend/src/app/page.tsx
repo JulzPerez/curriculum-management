@@ -1,43 +1,36 @@
-"use client";
+import LoginForm from "../features/auth/components/LoginForm";
 
-import { useAuth } from "@/features/auth/context/AuthContext";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-
-export default function Dashboard() {
-  const { user, logout, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading, router]);
-
-  if (loading) return <div className="p-10">Loading...</div>;
-  if (!user) return null;
-
+export default function LoginPage() {
   return (
-    <main className="min-h-screen p-8 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
-        
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-xl font-semibold mb-2">
-            Welcome, {user.email}
-          </h2>
-          <p className="text-gray-500 mb-6">
-            Role: {user.is_superuser ? "Administrator" : "Faculty"}
-          </p>
-          
-          <button 
-            onClick={logout}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-          >
-            Sign Out
-          </button>
-        </div>
+    <main className="relative min-h-screen overflow-hidden bg-gray-50 flex items-center justify-center px-4 py-12">
+      
+      {/* Background blobs */}
+      <div className="pointer-events-none absolute inset-0 opacity-60">
+        <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blue-200 blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-indigo-200 blur-3xl" />
       </div>
+
+      <section className="relative w-full max-w-md">
+        
+        {/* Header */}
+        <header className="mb-6 text-center">
+          <h1 className="text-2xl font-semibold text-gray-900">
+            CSD Curriculum Management System
+          </h1>
+          <p className="mt-1 text-sm text-gray-600">
+            Sign in to continue
+          </p>
+        </header>
+
+        {/* Card */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          <LoginForm />
+        </div>
+
+        <p className="mt-6 text-center text-xs text-gray-500">
+          © {new Date().getFullYear()} CSD
+        </p>
+      </section>
     </main>
   );
 }
