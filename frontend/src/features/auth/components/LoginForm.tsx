@@ -3,8 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("admin@university.edu");
   const [password, setPassword] = useState("password");
   const [showPw, setShowPw] = useState(false);
@@ -14,17 +17,44 @@ export default function LoginForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+
+    if (!email || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await new Promise((r) => setTimeout(r, 700));
-      if (!email || !password) {
-        setError("Please enter your email and password.");
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/v1/login/access-token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: formData.toString(),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.detail || "Invalid email or password.");
         return;
       }
-      alert("Signed in (UI demo). Hook backend next.");
-    } catch {
-      setError("Something went wrong. Please try again.");
+
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("token_type", data.token_type || "bearer");
+
+      router.push("/dashboard");
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Unable to connect to the server. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -33,7 +63,6 @@ export default function LoginForm() {
   return (
     <div className="login-bg min-h-[100svh] w-full flex items-start justify-center px-4 py-3 sm:py-4 overflow-hidden">
       <div className="relative w-full max-w-lg">
-        {/* TOP BRAND HEADER */}
         <div className="flex items-center justify-center gap-3 text-center mb-3 sm:mb-4">
           <div className="shrink-0">
             <div className="bg-white p-2.5 rounded-xl shadow-lg border border-white">
@@ -60,12 +89,10 @@ export default function LoginForm() {
           </div>
         </div>
 
-        {/* CARD */}
         <div className="mx-auto w-full rounded-2xl bg-[#f7efe6] shadow-2xl ring-1 ring-yellow-200/50 overflow-hidden">
           <div className="p-[2px] bg-gradient-to-r from-yellow-200/70 via-yellow-100/40 to-yellow-200/70">
             <div className="rounded-2xl bg-[#f7efe6]">
               <div className="px-5 sm:px-6 pt-5 pb-4">
-                {/* Title */}
                 <div className="text-center">
                   <h2 className="text-lg sm:text-xl font-extrabold text-red-900">
                     Login
@@ -81,9 +108,7 @@ export default function LoginForm() {
                   </div>
                 ) : null}
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-                  {/* Email */}
                   <div>
                     <label className="block text-sm font-semibold text-red-900/80">
                       Email
@@ -102,7 +127,6 @@ export default function LoginForm() {
                     </div>
                   </div>
 
-                  {/* Password */}
                   <div>
                     <label className="block text-sm font-semibold text-red-900/80">
                       Password
@@ -130,7 +154,6 @@ export default function LoginForm() {
                       </button>
                     </div>
 
-                    {/* Forgot password link */}
                     <div className="mt-1.5 text-right">
                       <Link
                         href="/forgot-password"
@@ -141,7 +164,6 @@ export default function LoginForm() {
                     </div>
                   </div>
 
-                  {/* Button */}
                   <button
                     type="submit"
                     disabled={loading}
@@ -153,7 +175,6 @@ export default function LoginForm() {
                 </form>
               </div>
 
-              {/* Footer links */}
               <div className="border-t border-yellow-200/60 bg-[#f3e7dc] px-5 sm:px-6 py-2.5">
                 <div className="flex items-center justify-center gap-5 text-sm text-red-900/70">
                   <Link href="/help" className="hover:text-red-900 hover:underline">
@@ -173,7 +194,6 @@ export default function LoginForm() {
           </div>
         </div>
 
-        {/* Page footer */}
         <p className="mt-3 text-center text-xs text-yellow-100/70">
           © {new Date().getFullYear()} MSU-Iligan Institute of Technology. All
           rights reserved.
