@@ -2,14 +2,22 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # 1. CRITICAL IMPORTS
-# These were missing or broken in previous versions
 from app.core.config import settings
-from app.api.v1.endpoints import login, users
+from app.api.v1.endpoints import login, users, courses
+
+# --- NEW: AUTOMATIC DATABASE CREATION ---
+# This looks at your Python models and builds the Postgres tables!
+from app.db.session import engine
+from app.db.base_class import Base
+from app.models.user import User      
+from app.models.course import Course  
+
+Base.metadata.create_all(bind=engine)
+# ----------------------------------------
 
 app = FastAPI(title=settings.PROJECT_NAME)
 
 # 2. CORS SETUP
-# Allows your Frontend (port 3000) to talk to Backend (port 8000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -19,18 +27,22 @@ app.add_middleware(
 )
 
 # 3. ROUTER REGISTRATION
-# This creates the endpoint: /api/v1/login/access-token
 app.include_router(
     login.router, 
     prefix=f"{settings.API_V1_STR}/login", 
     tags=["login"]
 )
 
-# This creates the endpoint: /api/v1/users/me
 app.include_router(
     users.router, 
     prefix=f"{settings.API_V1_STR}/users", 
     tags=["users"]
+)
+
+app.include_router(
+    courses.router, 
+    prefix=f"{settings.API_V1_STR}/courses", 
+    tags=["courses"]
 )
 
 # 4. HEALTH CHECK
