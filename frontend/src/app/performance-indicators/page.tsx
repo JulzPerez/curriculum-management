@@ -1,481 +1,426 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  getPerformanceIndicators,
+  createPerformanceIndicator,
+  updatePerformanceIndicator,
+  deletePerformanceIndicator,
+  PerformanceIndicator,
+} from "@/lib/performanceIndicators";
 
-type Indicator = {
-  id: number;
+type FormState = {
   indicator_code: string;
   indicator_name: string;
   description: string;
-  target_value: number;
-  current_value: number;
+  target_value: string;
+  current_value: string;
 };
 
-const API_BASE_URL = "http://127.0.0.1:8000/api/indicators";
-
-function getStatus(current: number, target: number) {
-  return current >= target ? "On Track" : "Needs Attention";
-}
+const emptyForm: FormState = {
+  indicator_code: "",
+  indicator_name: "",
+  description: "",
+  target_value: "",
+  current_value: "",
+};
 
 export default function PerformanceIndicatorsPage() {
-  const [indicators, setIndicators] = useState<Indicator[]>([]);
-  const [search, setSearch] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<Indicator | null>(null);
+  const [items, setItems] = useState<PerformanceIndicator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [form, setForm] = useState({
-    indicator_code: "",
-    indicator_name: "",
-    description: "",
-    target_value: "",
-    current_value: "",
-  });
-
-  const fetchIndicators = async () => {
+  async function loadIndicators() {
     try {
       setLoading(true);
-
-      const res = await fetch(`${API_BASE_URL}/`, {
-        cache: "no-store",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data?.error || "Failed to fetch indicators.");
-      }
-
-      setIndicators(Array.isArray(data) ? data : []);
-    } catch (error: any) {
-      alert(error.message || "Unable to load indicators.");
+      setError("");
+      const data = await getPerformanceIndicators();
+      setItems(data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load performance indicators.");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   useEffect(() => {
-    fetchIndicators();
+    loadIndicators();
   }, []);
 
-  const filteredIndicators = useMemo(() => {
-    return indicators.filter((item) =>
-      `${item.indicator_code} ${item.indicator_name} ${item.description}`
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    );
-  }, [indicators, search]);
+  function resetForm() {
+    setForm(emptyForm);
+    setEditingId(null);
+  }
 
-  const totalIndicators = indicators.length;
-  const onTrackCount = indicators.filter(
-    (item) => item.current_value >= item.target_value
-  ).length;
-  const needsAttentionCount = totalIndicators - onTrackCount;
-
-  const resetForm = () => {
+  function handleEdit(item: PerformanceIndicator) {
+    setEditingId(item.id);
     setForm({
-      indicator_code: "",
-      indicator_name: "",
-      description: "",
-      target_value: "",
-      current_value: "",
+      indicator_code: item.indicator_code ?? "",
+      indicator_name: item.indicator_name ?? "",
+      description: item.description ?? "",
+      target_value:
+        item.target_value !== undefined && item.target_value !== null
+          ? String(item.target_value)
+          : "",
+      current_value:
+        item.current_value !== undefined && item.current_value !== null
+          ? String(item.current_value)
+          : "",
     });
-    setEditing(null);
-  };
+    setSuccess("");
+    setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
-  const openAddModal = () => {
-    resetForm();
-    setShowModal(true);
-  };
-
-  const openEditModal = (item: Indicator) => {
-    setEditing(item);
-    setForm({
-      indicator_code: item.indicator_code,
-      indicator_name: item.indicator_name,
-      description: item.description,
-      target_value: String(item.target_value),
-      current_value: String(item.current_value),
-    });
-    setShowModal(true);
-  };
-
-  const handleSave = async () => {
-    if (
-      !form.indicator_code.trim() ||
-      !form.indicator_name.trim() ||
-      !form.description.trim() ||
-      !form.target_value ||
-      !form.current_value
-    ) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    const targetValue = Number(form.target_value);
-    const currentValue = Number(form.current_value);
-
-    if (Number.isNaN(targetValue) || Number.isNaN(currentValue)) {
-      alert("Target value and current value must be valid numbers.");
-      return;
-    }
-
-    const payload = {
-      indicator_code: form.indicator_code.trim(),
-      indicator_name: form.indicator_name.trim(),
-      description: form.description.trim(),
-      target_value: targetValue,
-      current_value: currentValue,
-    };
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    setSuccess("");
 
     try {
-      setSubmitting(true);
+      const payload = {
+        indicator_code: form.indicator_code.trim(),
+        indicator_name: form.indicator_name.trim(),
+        description: form.description.trim() || undefined,
+        target_value: form.target_value !== "" ? Number(form.target_value) : undefined,
+        current_value: form.current_value !== "" ? Number(form.current_value) : undefined,
+      };
 
-      const url = editing
-        ? `${API_BASE_URL}/${editing.id}`
-        : `${API_BASE_URL}/`;
-
-      const method = editing ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(
-          data?.error || data?.detail || "Failed to save indicator."
-        );
+      if (!payload.indicator_code || !payload.indicator_name) {
+        setError("Indicator code and indicator name are required.");
+        setSaving(false);
+        return;
       }
 
-      await fetchIndicators();
-      setShowModal(false);
-      resetForm();
-    } catch (error: any) {
-      alert(error.message || "Unable to save indicator.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      if (editingId !== null) {
+        await updatePerformanceIndicator(editingId, payload);
+        setSuccess("Performance indicator updated successfully.");
+      } else {
+        await createPerformanceIndicator(payload);
+        setSuccess("Performance indicator added successfully.");
+      }
 
-  const handleDelete = async (id: number) => {
+      resetForm();
+      await loadIndicators();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save performance indicator.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: number) {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this indicator?"
+      "Are you sure you want to delete this performance indicator?"
     );
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/${id}`, {
-        method: "DELETE",
-      });
+      setError("");
+      setSuccess("");
+      await deletePerformanceIndicator(id);
+      setSuccess("Performance indicator deleted successfully.");
+      await loadIndicators();
 
-      let data: any = {};
-      try {
-        data = await res.json();
-      } catch {
-        data = {};
+      if (editingId === id) {
+        resetForm();
       }
-
-      if (!res.ok) {
-        throw new Error(
-          data?.error || data?.detail || "Failed to delete indicator."
-        );
-      }
-
-      await fetchIndicators();
-    } catch (error: any) {
-      alert(error.message || "Unable to delete indicator.");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to delete performance indicator.");
     }
-  };
+  }
+
+  const filteredItems = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    if (!keyword) return items;
+
+    return items.filter((item) => {
+      return (
+        item.indicator_code?.toLowerCase().includes(keyword) ||
+        item.indicator_name?.toLowerCase().includes(keyword) ||
+        item.description?.toLowerCase().includes(keyword)
+      );
+    });
+  }, [items, query]);
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#5f0b13_0%,#760f19_38%,#86111c_62%,#5b0912_100%)] text-white">
-      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
-        <div className="mb-6 rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.10),rgba(255,255,255,0.05))] px-6 py-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="mb-3 inline-flex rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/75">
-                Academic Monitoring
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#7f0c10] via-[#990f14] to-[#6f0d17]">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,214,102,0.10),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(255,190,120,0.07),transparent_28%)]" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-screen w-full items-start justify-center px-4 py-6 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1280px] overflow-hidden rounded-[26px] border border-yellow-100/15 bg-[#f6ede2]/96 shadow-[0_28px_70px_rgba(20,5,5,0.34)] backdrop-blur-xl">
+          <div className="relative overflow-hidden border-b border-white/10 bg-[linear-gradient(135deg,#7f0c10_0%,#8f0d10_30%,#a31621_58%,#c88b2d_100%)] px-6 py-7 sm:px-8 sm:py-8">
+            <div className="relative flex flex-col gap-5">
+              <div>
+                <p className="text-[13px] font-medium text-white/80">
+                  Curriculum Management System
+                </p>
+                <h1 className="mt-1 text-[2rem] font-bold tracking-tight text-white sm:text-[2.25rem]">
+                  📊 Performance Indicators
+                </h1>
+              </div>
+
+              <p className="max-w-[760px] text-sm leading-7 text-white/85 sm:text-base">
+                Manage performance indicators with full create, view, update, and delete functionality.
               </p>
 
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Performance Indicators Management
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
-                View, add, update, and manage institutional performance
-                indicators in a premium maroon monitoring workspace.
-              </p>
+              <div className="max-w-[760px]">
+                <div className="flex items-center rounded-2xl border border-white/20 bg-white/90 px-4 py-3 shadow-[0_10px_30px_rgba(50,10,10,0.12)]">
+                  <input
+                    type="text"
+                    placeholder="Search by code, name, or description..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-full bg-transparent text-[15px] text-[#5b1013] outline-none placeholder:text-[#8b6a6d]"
+                  />
+                  <span className="ml-3 text-lg text-[#8f0d10]/70">⌕</span>
+                </div>
+              </div>
             </div>
-
-            <button
-              onClick={openAddModal}
-              className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/12 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-white/18"
-            >
-              + Add Indicator
-            </button>
-          </div>
-        </div>
-
-        <div className="mb-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 shadow-[0_14px_35px_rgba(0,0,0,0.20)] backdrop-blur-xl">
-            <p className="text-sm font-medium text-white/70">Total Indicators</p>
-            <h2 className="mt-3 text-4xl font-bold text-white">{totalIndicators}</h2>
-            <p className="mt-2 text-sm text-white/55">
-              Total performance metrics currently recorded.
-            </p>
           </div>
 
-          <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 shadow-[0_14px_35px_rgba(0,0,0,0.20)] backdrop-blur-xl">
-            <p className="text-sm font-medium text-white/70">On Track</p>
-            <h2 className="mt-3 text-4xl font-bold text-emerald-300">
-              {onTrackCount}
-            </h2>
-            <p className="mt-2 text-sm text-white/55">
-              Indicators that have met or exceeded their targets.
-            </p>
-          </div>
+          <div className="bg-[#f4eee7] px-5 py-6 sm:px-6 sm:py-7">
+            <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+              <section className="rounded-[22px] border border-[#ead8d1] bg-white/78 p-5 shadow-[0_8px_18px_rgba(40,10,10,0.05)]">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-[1.15rem] font-bold text-[#6f0d17]">
+                      {editingId !== null ? "✏️ Update Indicator" : "➕ Add Indicator"}
+                    </h2>
+                    <p className="mt-1 text-sm text-[#6e4d50]">
+                      Fill in the details below.
+                    </p>
+                  </div>
 
-          <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 shadow-[0_14px_35px_rgba(0,0,0,0.20)] backdrop-blur-xl">
-            <p className="text-sm font-medium text-white/70">Needs Attention</p>
-            <h2 className="mt-3 text-4xl font-bold text-rose-300">
-              {needsAttentionCount}
-            </h2>
-            <p className="mt-2 text-sm text-white/55">
-              Indicators that are currently below target values.
-            </p>
-          </div>
-        </div>
-
-        <div className="mb-6 rounded-[24px] border border-white/10 bg-white/10 p-4 shadow-[0_14px_35px_rgba(0,0,0,0.18)] backdrop-blur-xl">
-          <input
-            type="text"
-            placeholder="Search indicator code, name, or description..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-white/12 px-4 py-3 text-sm text-white placeholder:text-white/45 outline-none transition focus:border-white/20 focus:bg-white/15"
-          />
-        </div>
-
-        <div className="overflow-hidden rounded-[28px] border border-white/10 bg-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm text-white/90">
-              <thead className="bg-white/10 text-white/80">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">Code</th>
-                  <th className="px-6 py-4 font-semibold">Indicator Name</th>
-                  <th className="px-6 py-4 font-semibold">Description</th>
-                  <th className="px-6 py-4 font-semibold">Target</th>
-                  <th className="px-6 py-4 font-semibold">Current</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-12 text-center text-white/60"
+                  {editingId !== null && (
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="rounded-xl border border-[#e3cfc8] bg-white px-4 py-2 text-sm font-semibold text-[#7a1a1d] transition hover:bg-[#fffaf7]"
                     >
-                      Loading indicators...
-                    </td>
-                  </tr>
-                ) : filteredIndicators.length > 0 ? (
-                  filteredIndicators.map((item) => {
-                    const status = getStatus(
-                      item.current_value,
-                      item.target_value
-                    );
+                      Cancel
+                    </button>
+                  )}
+                </div>
 
-                    return (
-                      <tr
-                        key={item.id}
-                        className="border-t border-white/8 transition hover:bg-white/[0.045]"
-                      >
-                        <td className="px-6 py-4 text-white/78">
-                          {item.indicator_code}
-                        </td>
-                        <td className="px-6 py-4 font-semibold text-white">
-                          {item.indicator_name}
-                        </td>
-                        <td className="px-6 py-4 text-white/74">
-                          {item.description}
-                        </td>
-                        <td className="px-6 py-4">{item.target_value}</td>
-                        <td className="px-6 py-4">{item.current_value}</td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                              status === "On Track"
-                                ? "border border-emerald-300/20 bg-emerald-400/15 text-emerald-200"
-                                : "border border-rose-300/20 bg-rose-400/15 text-rose-200"
-                            }`}
-                          >
-                            {status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => openEditModal(item)}
-                              className="rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs font-semibold text-amber-100 transition hover:bg-amber-300/18"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(item.id)}
-                              className="rounded-xl border border-rose-300/20 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-100 transition hover:bg-rose-300/18"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-14 text-center text-white/60"
-                    >
-                      No indicators found.
-                    </td>
-                  </tr>
+                {(error || success) && (
+                  <div className="mt-4 space-y-2">
+                    {error && (
+                      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {error}
+                      </div>
+                    )}
+                    {success && (
+                      <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                        {success}
+                      </div>
+                    )}
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-2xl rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(103,13,22,0.98),rgba(85,10,18,0.98))] p-6 text-white shadow-[0_25px_70px_rgba(0,0,0,0.35)]">
-              <div className="mb-5 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-white/55">
-                    Indicator Form
-                  </p>
-                  <h2 className="mt-2 text-2xl font-bold tracking-tight">
-                    {editing
-                      ? "Update Performance Indicator"
-                      : "Add Performance Indicator"}
-                  </h2>
+                <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#6f0d17]">
+                      Indicator Code
+                    </label>
+                    <input
+                      type="text"
+                      value={form.indicator_code}
+                      onChange={(e) =>
+                        setForm({ ...form, indicator_code: e.target.value })
+                      }
+                      placeholder="e.g. PI-001"
+                      className="w-full rounded-2xl border border-[#d8c5be] bg-white px-4 py-3 text-[#4e2d30] outline-none transition focus:border-[#d9b233] focus:ring-2 focus:ring-[#d9b233]/30"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#6f0d17]">
+                      Indicator Name
+                    </label>
+                    <input
+                      type="text"
+                      value={form.indicator_name}
+                      onChange={(e) =>
+                        setForm({ ...form, indicator_name: e.target.value })
+                      }
+                      placeholder="e.g. Graduation Rate"
+                      className="w-full rounded-2xl border border-[#d8c5be] bg-white px-4 py-3 text-[#4e2d30] outline-none transition focus:border-[#d9b233] focus:ring-2 focus:ring-[#d9b233]/30"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-[#6f0d17]">
+                      Description
+                    </label>
+                    <textarea
+                      value={form.description}
+                      onChange={(e) =>
+                        setForm({ ...form, description: e.target.value })
+                      }
+                      placeholder="Enter a short description..."
+                      rows={4}
+                      className="w-full rounded-2xl border border-[#d8c5be] bg-white px-4 py-3 text-[#4e2d30] outline-none transition focus:border-[#d9b233] focus:ring-2 focus:ring-[#d9b233]/30"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-[#6f0d17]">
+                        Target Value
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={form.target_value}
+                        onChange={(e) =>
+                          setForm({ ...form, target_value: e.target.value })
+                        }
+                        placeholder="e.g. 95"
+                        className="w-full rounded-2xl border border-[#d8c5be] bg-white px-4 py-3 text-[#4e2d30] outline-none transition focus:border-[#d9b233] focus:ring-2 focus:ring-[#d9b233]/30"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-[#6f0d17]">
+                        Current Value
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={form.current_value}
+                        onChange={(e) =>
+                          setForm({ ...form, current_value: e.target.value })
+                        }
+                        placeholder="e.g. 88"
+                        className="w-full rounded-2xl border border-[#d8c5be] bg-white px-4 py-3 text-[#4e2d30] outline-none transition focus:border-[#d9b233] focus:ring-2 focus:ring-[#d9b233]/30"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="w-full rounded-2xl bg-gradient-to-r from-[#8f0d10] via-[#b10f16] to-[#8f0d10] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(109,15,18,0.22)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {saving
+                      ? "Saving..."
+                      : editingId !== null
+                      ? "Update Indicator"
+                      : "Add Indicator"}
+                  </button>
+                </form>
+              </section>
+
+              <section className="rounded-[22px] border border-[#ead8d1] bg-white/78 p-5 shadow-[0_8px_18px_rgba(40,10,10,0.05)]">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-[1.15rem] font-bold text-[#6f0d17]">
+                      📋 Indicator List
+                    </h2>
+                    <p className="mt-1 text-sm text-[#6e4d50]">
+                      View and manage all saved indicators.
+                    </p>
+                  </div>
+
+                  <div className="rounded-full bg-[#f9f0df] px-4 py-2 text-sm font-semibold text-[#7a1a1d] ring-1 ring-[#ecd9aa]">
+                    Total: {filteredItems.length}
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    resetForm();
-                  }}
-                  className="rounded-2xl border border-white/10 bg-white/10 px-3 py-2 text-white/70 transition hover:bg-white/15 hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
+                <div className="mt-5">
+                  {loading ? (
+                    <div className="rounded-2xl border border-[#ead8d1] bg-[#fffaf7] px-4 py-6 text-center text-sm text-[#6e4d50]">
+                      Loading performance indicators...
+                    </div>
+                  ) : filteredItems.length === 0 ? (
+                    <div className="rounded-2xl border border-[#ead8d1] bg-[#fffaf7] px-4 py-6 text-center text-sm text-[#6e4d50]">
+                      No performance indicators found.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {filteredItems.map((item) => (
+                        <div
+                          key={item.id}
+                          className="rounded-2xl border border-[#ead8d1] bg-white p-4 shadow-[0_6px_14px_rgba(50,10,10,0.04)]"
+                        >
+                          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-[#f9f0df] px-3 py-1 text-xs font-bold tracking-wide text-[#7a1a1d] ring-1 ring-[#ecd9aa]">
+                                  {item.indicator_code}
+                                </span>
+                              </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-white/78">
-                    Indicator Code
-                  </label>
-                  <input
-                    type="text"
-                    value={form.indicator_code}
-                    onChange={(e) =>
-                      setForm({ ...form, indicator_code: e.target.value })
-                    }
-                    className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition focus:border-white/20 focus:bg-white/14"
-                  />
+                              <h3 className="mt-3 text-lg font-bold text-[#6f0d17]">
+                                {item.indicator_name}
+                              </h3>
+
+                              <p className="mt-2 text-sm leading-6 text-[#6e4d50]">
+                                {item.description || "No description provided."}
+                              </p>
+
+                              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-xl bg-[#fcf8f1] px-4 py-3 ring-1 ring-[#eee0d7]">
+                                  <p className="text-xs font-semibold uppercase tracking-wide text-[#9a6d70]">
+                                    Target Value
+                                  </p>
+                                  <p className="mt-1 text-base font-bold text-[#6f0d17]">
+                                    {item.target_value ?? "-"}
+                                  </p>
+                                </div>
+
+                                <div className="rounded-xl bg-[#fcf8f1] px-4 py-3 ring-1 ring-[#eee0d7]">
+                                  <p className="text-xs font-semibold uppercase tracking-wide text-[#9a6d70]">
+                                    Current Value
+                                  </p>
+                                  <p className="mt-1 text-base font-bold text-[#6f0d17]">
+                                    {item.current_value ?? "-"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex shrink-0 flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(item)}
+                                className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600"
+                              >
+                                Edit
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(item.id)}
+                                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-white/78">
-                    Indicator Name
-                  </label>
-                  <input
-                    type="text"
-                    value={form.indicator_name}
-                    onChange={(e) =>
-                      setForm({ ...form, indicator_name: e.target.value })
-                    }
-                    className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition focus:border-white/20 focus:bg-white/14"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-medium text-white/78">
-                    Description
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={form.description}
-                    onChange={(e) =>
-                      setForm({ ...form, description: e.target.value })
-                    }
-                    className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition focus:border-white/20 focus:bg-white/14"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-white/78">
-                    Target Value
-                  </label>
-                  <input
-                    type="number"
-                    value={form.target_value}
-                    onChange={(e) =>
-                      setForm({ ...form, target_value: e.target.value })
-                    }
-                    className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition focus:border-white/20 focus:bg-white/14"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-white/78">
-                    Current Value
-                  </label>
-                  <input
-                    type="number"
-                    value={form.current_value}
-                    onChange={(e) =>
-                      setForm({ ...form, current_value: e.target.value })
-                    }
-                    className="w-full rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white outline-none transition focus:border-white/20 focus:bg-white/14"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    resetForm();
-                  }}
-                  className="rounded-2xl border border-white/12 bg-white/5 px-5 py-3 text-sm font-medium text-white/82 transition hover:bg-white/10"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  onClick={handleSave}
-                  disabled={submitting}
-                  className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-[#6c0d16] transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {submitting ? "Saving..." : editing ? "Update" : "Save"}
-                </button>
-              </div>
+              </section>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </main>
   );
