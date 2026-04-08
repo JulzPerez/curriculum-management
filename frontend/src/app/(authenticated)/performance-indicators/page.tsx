@@ -133,7 +133,7 @@ export default function PerformanceIndicatorsPage() {
       };
 
       if (!payload.indicator_code || !payload.indicator_name) {
-        setError("Indicator code and indicator name are required.");
+        setError("Indicator code and name are required.");
         setSaving(false);
         return;
       }
@@ -207,7 +207,7 @@ export default function PerformanceIndicatorsPage() {
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
               View and manage academic performance indicators, including targets
-              and current progress, in a cleaner space-saving layout.
+              and current progress.
             </p>
           </div>
 
@@ -362,7 +362,7 @@ export default function PerformanceIndicatorsPage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-5">
           <button
             type="button"
             aria-label="Close modal backdrop"
@@ -370,14 +370,14 @@ export default function PerformanceIndicatorsPage() {
             className="absolute inset-0 bg-slate-900/45 backdrop-blur-[6px]"
           />
 
-          <div className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[30px] border border-white/20 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.22)]">
-            <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 px-6 py-5">
+          <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-[26px] border border-white/20 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.18)]">
+            <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 via-white to-slate-50 px-5 py-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="inline-flex rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-600">
                     Performance Indicator
                   </div>
-                  <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900">
+                  <h2 className="mt-2 text-xl font-black tracking-tight text-slate-900">
                     {editingId !== null ? "Edit Indicator" : "Add Indicator"}
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
@@ -390,16 +390,16 @@ export default function PerformanceIndicatorsPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-lg font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-lg font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
                 >
                   ×
                 </button>
               </div>
             </div>
 
-            <div className="max-h-[85vh] overflow-y-auto px-6 py-6">
+            <div className="max-h-[75vh] overflow-y-auto px-5 py-5">
               {(error || success) && (
-                <div className="mb-5 space-y-3">
+                <div className="mb-4 space-y-3">
                   {error && (
                     <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
                       {error}
@@ -413,11 +413,11 @@ export default function PerformanceIndicatorsPage() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-5 md:grid-cols-2">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Indicator Code
+                    Code
                     </label>
                     <input
                       type="text"
@@ -426,7 +426,7 @@ export default function PerformanceIndicatorsPage() {
                         setForm({ ...form, indicator_code: e.target.value })
                       }
                       placeholder="PI-001"
-                      className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
                       required
                     />
                   </div>
@@ -442,7 +442,7 @@ export default function PerformanceIndicatorsPage() {
                         setForm({ ...form, indicator_name: e.target.value })
                       }
                       placeholder="Graduation Rate"
-                      className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
                       required
                     />
                   </div>
@@ -458,12 +458,12 @@ export default function PerformanceIndicatorsPage() {
                       setForm({ ...form, description: e.target.value })
                     }
                     placeholder="Short description..."
-                    rows={4}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                    rows={3}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
                   />
                 </div>
 
-                <div className="grid gap-5 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-700">
                       Target Value
@@ -476,7 +476,7 @@ export default function PerformanceIndicatorsPage() {
                         setForm({ ...form, target_value: e.target.value })
                       }
                       placeholder="95"
-                      className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
                     />
                   </div>
 
@@ -492,17 +492,17 @@ export default function PerformanceIndicatorsPage() {
                         setForm({ ...form, current_value: e.target.value })
                       }
                       placeholder="88"
-                      className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                      className="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
+                <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:justify-end">
                   <button
                     type="button"
                     onClick={closeModal}
                     disabled={saving}
-                    className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     Cancel
                   </button>
@@ -510,7 +510,7 @@ export default function PerformanceIndicatorsPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="inline-flex h-12 items-center justify-center rounded-2xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {saving
                       ? "Saving..."
