@@ -42,8 +42,6 @@ export default function Dashboard() {
           <Link href="/outcomes">
             <NavItem label="Graduate Outcomes" />
           </Link>
-          <NavItem label="Archive (Old Files)" />
-          <NavItem label="AI Draft Generator" />
           <NavItem label="Curriculum Maps" />
           <NavItem label="Syllabus Review" />
           <NavItem label="Department Settings" />
