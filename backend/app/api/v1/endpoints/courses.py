@@ -1,7 +1,7 @@
 from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.db.session import get_db
+from app.api.deps import get_db
 from app.models.course import Course as CourseModel
 
 router = APIRouter()
