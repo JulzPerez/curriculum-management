@@ -2,12 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api.v1.endpoints import login, users, performance_indicators, courses
+from app.api.v1.endpoints import login, users, performance_indicators, courses, course_outcomes
 
 from app.db.session import engine
 from app.db.base_class import Base
 from app.models.user import User
 from app.models.course import Course
+from app.models.course_outcome import CourseOutcome
 
 Base.metadata.create_all(bind=engine)
 
@@ -43,6 +44,12 @@ app.include_router(
     courses.router,
     prefix=f"{settings.API_V1_STR}/courses",
     tags=["courses"]
+)
+
+app.include_router(
+    course_outcomes.router,
+    prefix=f"{settings.API_V1_STR}/course-outcomes",
+    tags=["course-outcomes"]
 )
 
 @app.get("/")
