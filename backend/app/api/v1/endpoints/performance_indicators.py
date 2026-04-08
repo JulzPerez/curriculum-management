@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
+from app.api.deps import get_db
 from app.models.performance_indicator import PerformanceIndicator
 from app.schemas.performance_indicator import (
     PerformanceIndicatorCreate,

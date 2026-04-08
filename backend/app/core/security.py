@@ -10,7 +10,7 @@ ALGORITHM = "HS256"  # <--- I added this back so deps.py stops crashing!
 # 1. Hash a password
 def get_password_hash(password: str) -> str:
     pwd_bytes = password.encode('utf-8')
-    salt = bcrypt.gensalt()
+    salt = bcrypt.gensalt(rounds=10)
     hashed_bytes = bcrypt.hashpw(pwd_bytes, salt)
     return hashed_bytes.decode('utf-8')
 

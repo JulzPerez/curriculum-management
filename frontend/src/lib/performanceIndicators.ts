@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+import api from "./axios";
 
 export interface PerformanceIndicator {
   id: number;
@@ -20,38 +20,24 @@ export interface PerformanceIndicatorPayload {
 }
 
 export async function getPerformanceIndicators(): Promise<PerformanceIndicator[]> {
-  const res = await fetch(`${API_URL}/v1/performance-indicators/`);
-  if (!res.ok) throw new Error("Failed to fetch performance indicators");
-  return res.json();
+  const res = await api.get("/performance-indicators/");
+  return res.data;
 }
 
 export async function createPerformanceIndicator(payload: PerformanceIndicatorPayload) {
-  const res = await fetch(`${API_URL}/v1/performance-indicators/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error("Failed to create performance indicator");
-  return res.json();
+  const res = await api.post("/performance-indicators/", payload);
+  return res.data;
 }
 
 export async function updatePerformanceIndicator(
   id: number,
   payload: Partial<PerformanceIndicatorPayload>
 ) {
-  const res = await fetch(`${API_URL}/v1/performance-indicators/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error("Failed to update performance indicator");
-  return res.json();
+  const res = await api.put(`/performance-indicators/${id}`, payload);
+  return res.data;
 }
 
 export async function deletePerformanceIndicator(id: number) {
-  const res = await fetch(`${API_URL}/v1/performance-indicators/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Failed to delete performance indicator");
-  return res.json();
+  const res = await api.delete(`/performance-indicators/${id}`);
+  return res.data;
 }

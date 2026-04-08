@@ -59,24 +59,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     params.append("username", email);
     params.append("password", password);
 
-    const apiUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
-
-    const response = await fetch(`${apiUrl}/v1/login/access-token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: params,
+    const response = await api.post("/login/access-token", params, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || "Login failed");
-    }
-
-    const data = await response.json();
-    const token = data.access_token;
+    const token = response.data.access_token;
 
     localStorage.setItem("token", token);
 

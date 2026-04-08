@@ -15,4 +15,4 @@ COPY . .
 
 # 6. The command to start the server
 # (host 0.0.0.0 is crucial for Docker)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
