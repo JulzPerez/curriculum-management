@@ -207,7 +207,7 @@ export default function PerformanceIndicatorsPage() {
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
               View and manage academic performance indicators, including targets
-              and current progress, in a cleaner space-saving layout.
+              and current progress.
             </p>
           </div>
 
