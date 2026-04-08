@@ -3,6 +3,7 @@
 import { useAuth } from "@/features/auth/context/AuthContext";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Dashboard() {
   const { user, logout, loading } = useAuth();
@@ -19,7 +20,7 @@ export default function Dashboard() {
       <div className="text-slate-500 font-medium animate-pulse">Initializing SCMS...</div>
     </div>
   );
-  
+
   if (!user) return null;
 
   return (
@@ -32,7 +33,15 @@ export default function Dashboard() {
         </div>
 
         <nav className="flex-1 space-y-1">
-          <NavItem label="Dashboard" active />
+          <Link href="/dashboard">
+            <NavItem label="Dashboard" active />
+          </Link>
+          <Link href="/courses">
+            <NavItem label="Course Management" />
+          </Link>
+          <Link href="/outcomes">
+            <NavItem label="Graduate Outcomes" />
+          </Link>
           <NavItem label="Archive (Old Files)" />
           <NavItem label="AI Draft Generator" />
           <NavItem label="Curriculum Maps" />
@@ -41,7 +50,7 @@ export default function Dashboard() {
         </nav>
 
         <div className="mt-auto pt-6 border-t border-white/10">
-          <button 
+          <button
             onClick={logout}
             className="flex items-center gap-3 w-full px-4 py-3 text-red-300 hover:bg-red-500/10 rounded-xl transition-all text-sm font-medium"
           >
@@ -61,7 +70,7 @@ export default function Dashboard() {
               Current Access: <span className="text-indigo-600 font-semibold">{user.is_superuser ? "System Administrator" : "Faculty Member"}</span>
             </p>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="text-right mr-2 hidden md:block">
                <p className="text-xs font-bold text-slate-800">{user.email}</p>
@@ -90,7 +99,7 @@ export default function Dashboard() {
                   + New AI Draft
                 </button>
              </div>
-             
+
              {/* Simple Table for Drafts */}
              <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -116,7 +125,7 @@ export default function Dashboard() {
                 </div>
              </div>
           </div>
-          
+
           {/* System Notifications / Archive Stats */}
           <div className="bg-[#1E1B4B] p-8 rounded-[32px] text-white shadow-xl relative overflow-hidden">
              <div className="relative z-10">
@@ -132,7 +141,7 @@ export default function Dashboard() {
                       </div>
                    </div>
                    <p className="text-xs leading-relaxed opacity-70">
-                      Your historical curriculum data (2015-2023) is currently being indexed for the LLM generator. 
+                      Your historical curriculum data (2015-2023) is currently being indexed for the LLM generator.
                    </p>
                    <button className="w-full py-3 bg-white text-indigo-900 rounded-xl text-xs font-bold hover:bg-opacity-90 transition-all">
                       Upload Old Files
@@ -152,14 +161,14 @@ export default function Dashboard() {
 
 function NavItem({ label, active = false }: { label: string, active?: boolean }) {
   return (
-    <button className={`
+    <div className={`
       flex items-center w-full px-4 py-3.5 rounded-2xl transition-all text-sm font-medium
-      ${active 
-        ? 'bg-white/15 text-white shadow-sm' 
+      ${active
+        ? 'bg-white/15 text-white shadow-sm'
         : 'text-white/40 hover:text-white hover:bg-white/5'}
     `}>
       {label}
-    </button>
+    </div>
   );
 }
 
