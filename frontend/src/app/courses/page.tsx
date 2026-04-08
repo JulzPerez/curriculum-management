@@ -14,7 +14,7 @@ interface Course {
   prerequisite: string | null;
 }
 
-const API_URL = "http://localhost:8000/api/v1/courses";
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/v1/courses`;
 
 export default function CourseManagement() {
   // 2. Type the state as Course[] instead of an empty never[]
