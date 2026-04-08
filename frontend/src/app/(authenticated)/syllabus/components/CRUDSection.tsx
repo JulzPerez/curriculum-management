@@ -122,9 +122,18 @@ export default function CRUDSection({
             onSubmit={handleSubmit}
             className="bg-white p-8 rounded-2xl w-full max-w-xl shadow-2xl max-h-[90vh] overflow-y-auto"
           >
-            <h3 className="text-lg font-bold text-slate-800 mb-6">
-              {editingIndex !== null ? "Edit" : "Add"} Entry
-            </h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-slate-800">
+                {editingIndex !== null ? "Edit" : "Add"} Entry
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="text-slate-400 hover:text-slate-600 transition-colors text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
 
             <div className="space-y-4">
               {fields.map(field => (
