@@ -7,8 +7,9 @@ const API_URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api
 
 interface MasterOutcome {
   id: number;
+  attribute: string;
   code: string;
-  description: string;
+  student_outcome: string;
 }
 
 interface Props {
@@ -43,7 +44,7 @@ export default function CourseOutcomesSection({ data, onAdd, onUpdate, onDelete 
   const addSelected = () => {
     masterList
       .filter(o => selected.has(o.id) && !alreadyAdded.has(o.code))
-      .forEach(o => onAdd({ code: o.code, description: o.description }));
+      .forEach(o => onAdd({ attribute: o.attribute, code: o.code, student_outcome: o.student_outcome }));
     setSelected(new Set());
     setIsPickerOpen(false);
   };
@@ -68,12 +69,14 @@ export default function CourseOutcomesSection({ data, onAdd, onUpdate, onDelete 
       <CRUDSection
         title=""
         columns={[
-          { key: "code",        label: "CO Code" },
-          { key: "description", label: "Description", truncate: true },
+          { key: "attribute",       label: "Attribute" },
+          { key: "code",            label: "Code" },
+          { key: "student_outcome", label: "Student Outcome", truncate: true },
         ]}
         fields={[
-          { key: "code",        label: "CO Code",     required: true, placeholder: "e.g. CO1" },
-          { key: "description", label: "Description", required: true, type: "textarea", placeholder: "Describe what students should be able to do..." },
+          { key: "attribute",       label: "Attribute",       required: true, placeholder: "e.g. Program Outcome a" },
+          { key: "code",            label: "Code",            required: true, placeholder: "e.g. CO1" },
+          { key: "student_outcome", label: "Student Outcome", required: true, type: "textarea", placeholder: "Describe what students should be able to do..." },
         ]}
         data={data}
         onAdd={onAdd}
@@ -120,11 +123,12 @@ export default function CourseOutcomesSection({ data, onAdd, onUpdate, onDelete 
                         className="mt-0.5 accent-indigo-600"
                       />
                       <div>
+                        <span className="text-xs text-slate-500 mr-2">{o.attribute}</span>
                         <span className="bg-indigo-50 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-md mr-2">
                           {o.code}
                         </span>
                         {alreadyIn && <span className="text-[10px] text-slate-400 font-medium">Already added</span>}
-                        <p className="text-sm text-slate-700 mt-1">{o.description}</p>
+                        <p className="text-sm text-slate-700 mt-1">{o.student_outcome}</p>
                       </div>
                     </label>
                   );

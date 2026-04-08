@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 
 class CourseOutcomeBase(BaseModel):
+    attribute: str
     code: str
-    description: str
+    student_outcome: str
 
 class CourseOutcomeCreate(CourseOutcomeBase):
     pass

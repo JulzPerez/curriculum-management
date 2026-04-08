@@ -6,15 +6,16 @@ const API_URL = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api
 
 interface CourseOutcome {
   id: number;
+  attribute: string;
   code: string;
-  description: string;
+  student_outcome: string;
 }
 
 export default function CourseOutcomesPage() {
   const [outcomes, setOutcomes] = useState<CourseOutcome[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState({ code: "", description: "" });
+  const [form, setForm] = useState({ attribute: "", code: "", student_outcome: "" });
 
   const fetchAll = async () => {
     const res = await fetch(API_URL);
@@ -25,13 +26,13 @@ export default function CourseOutcomesPage() {
 
   const openAdd = () => {
     setEditingId(null);
-    setForm({ code: "", description: "" });
+    setForm({ attribute: "", code: "", student_outcome: "" });
     setIsOpen(true);
   };
 
   const openEdit = (o: CourseOutcome) => {
     setEditingId(o.id);
-    setForm({ code: o.code, description: o.description });
+    setForm({ attribute: o.attribute, code: o.code, student_outcome: o.student_outcome });
     setIsOpen(true);
   };
 
@@ -54,7 +55,7 @@ export default function CourseOutcomesPage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Course Outcomes</h1>
@@ -82,8 +83,9 @@ export default function CourseOutcomesPage() {
             <thead>
               <tr className="bg-slate-50 border-b text-slate-400 text-[11px] uppercase font-bold tracking-wide">
                 <th className="px-4 py-3 w-10 text-center">#</th>
-                <th className="px-4 py-3 w-28">CO Code</th>
-                <th className="px-4 py-3">Description</th>
+                <th className="px-4 py-3">Attribute</th>
+                <th className="px-4 py-3 w-28">Code</th>
+                <th className="px-4 py-3">Student Outcome</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -91,12 +93,13 @@ export default function CourseOutcomesPage() {
               {outcomes.map((o, i) => (
                 <tr key={o.id} className="border-b last:border-0 hover:bg-slate-50/60 transition-colors">
                   <td className="px-4 py-3 text-xs text-slate-400 text-center">{i + 1}</td>
+                  <td className="px-4 py-3 text-sm text-slate-700">{o.attribute}</td>
                   <td className="px-4 py-3">
                     <span className="bg-indigo-50 text-indigo-700 text-xs font-bold px-2.5 py-1 rounded-lg">
                       {o.code}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-700">{o.description}</td>
+                  <td className="px-4 py-3 text-sm text-slate-700">{o.student_outcome}</td>
                   <td className="px-4 py-3 text-right space-x-3">
                     <button onClick={() => openEdit(o)} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Edit</button>
                     <button onClick={() => handleDelete(o.id)} className="text-red-500 hover:text-red-700 text-sm font-medium">Delete</button>
@@ -119,7 +122,17 @@ export default function CourseOutcomesPage() {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">CO Code</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Attribute</label>
+                <input
+                  required
+                  placeholder="e.g. Program Outcome a"
+                  className="w-full p-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
+                  value={form.attribute}
+                  onChange={e => setForm(f => ({ ...f, attribute: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Code</label>
                 <input
                   required
                   placeholder="e.g. CO1"
@@ -129,14 +142,14 @@ export default function CourseOutcomesPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Description</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Student Outcome</label>
                 <textarea
                   required
                   rows={4}
                   placeholder="Describe what students should be able to do..."
                   className="w-full p-3 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 resize-none transition"
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  value={form.student_outcome}
+                  onChange={e => setForm(f => ({ ...f, student_outcome: e.target.value }))}
                 />
               </div>
             </div>
