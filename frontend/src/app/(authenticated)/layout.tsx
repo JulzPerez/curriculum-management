@@ -37,7 +37,7 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
           <Link href="/courses"><NavItem label="Course Management" href="/courses" /></Link>
           <Link href="/outcomes"><NavItem label="Graduate Outcomes" href="/outcomes" /></Link>
           <NavItem label="Curriculum Maps" />
-          <NavItem label="Create Syllabus" />
+          <Link href="/syllabus"><NavItem label="Create Syllabus" href="/syllabus" /></Link>
           <NavItem label="Department Settings" />
         </nav>
 
